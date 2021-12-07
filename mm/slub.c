@@ -2995,7 +2995,6 @@ redo:
 	maybe_wipe_obj_freeptr(s, object);
 	init = slab_want_init_on_alloc(gfpflags, s);
 
-out:
 	if (has_sanitize_verify(s) && object) {
 		/* KASAN hasn't unpoisoned the object yet (this is done in the
 		 * post-alloc hook), so let's do it temporarily.
@@ -3006,6 +3005,7 @@ out:
 			s->ctor(object);
 		kasan_poison_object_data(s, object);
 	}
+out:
 	if (object) {
 		check_canary(s, object, s->random_inactive);
 		set_canary(s, object, s->random_active);
