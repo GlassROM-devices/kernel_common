@@ -1624,7 +1624,7 @@ static __always_inline bool slab_free_hook(struct kmem_cache *s,
 	 * The initialization memset's clear the object and the metadata,
 	 * but don't touch the SLAB redzone.
 	 */
-	check_canary(s, object, s->random_active);
+	check_canary(s, x, s->random_active);
 
 	if (init) {
 		int rsize;
@@ -1635,9 +1635,9 @@ static __always_inline bool slab_free_hook(struct kmem_cache *s,
 		memset((char *)kasan_reset_tag(x) + s->inuse, 0,
 		       s->size - s->inuse - rsize);
 		if (!IS_ENABLED(CONFIG_SLAB_SANITIZE_VERIFY) && s->ctor)
-		       s->ctor(object);
+		       s->ctor(x);
 	}
-	set_canary(s, object, s->random_inactive);
+	set_canary(s, x, s->random_inactive);
 	/* KASAN might put x into memory quarantine, delaying its reuse. */
 	return kasan_slab_free(s, x, init);
 }
@@ -2996,19 +2996,15 @@ redo:
 	init = slab_want_init_on_alloc(gfpflags, s);
 
 out:
-	if (has_sanitize_verify(s)) {
-		int j;
-
-		for (j = 0; j < i; j++) {
-			/* KASAN hasn't unpoisoned the object yet (this is done
-			 * in the post-alloc hook), so let's do it temporarily.
-			 */
-			kasan_unpoison_object_data(s, p[j]);
-			BUG_ON(memchr_inv(p[j], 0, s->object_size));
-			if (s->ctor)
-				s->ctor(p[j]);
-			kasan_poison_object_data(s, p[j]);
-		}
+	if (has_sanitize_verify(s) && object) {
+		/* KASAN hasn't unpoisoned the object yet (this is done in the
+		 * post-alloc hook), so let's do it temporarily.
+		 */
+		kasan_unpoison_object_data(s, object);
+		BUG_ON(memchr_inv(object, 0, s->object_size));
+		if (s->ctor)
+			s->ctor(object);
+		kasan_poison_object_data(s, object);
 	}
 	if (object) {
 		check_canary(s, object, s->random_inactive);

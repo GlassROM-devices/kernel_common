@@ -594,11 +594,11 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
 		p[i] = kasan_slab_alloc(s, p[i], flags, init);
 		if (p[i] && init && !kasan_has_integrated_init())
 			memset(p[i], 0, s->object_size);
-			if (s->ctor) {
-				kasan_unpoison_object_data(s, p[i]);
-				s->ctor(p[i]);
-				kasan_poison_object_data(s, p[i]);
-			}
+		if (s->ctor) {
+			kasan_unpoison_object_data(s, p[i]);
+			s->ctor(p[i]);
+			kasan_poison_object_data(s, p[i]);
+		}
 		kmemleak_alloc_recursive(p[i], s->object_size, 1,
 					 s->flags, flags);
 	}
