@@ -35,4 +35,4 @@ function modify_vendor_ramdisk() {
   ln -f init.recovery.gs101.rc init.recovery.raven.rc
 }
 
-EXT_MODULES_MAKEFILE=${KERNEL_DIR}/Makefile.ext_modules.slider
+EXT_MODULES_MAKEFILE=raviole/${KERNEL_DIR}/Makefile.ext_modules.slider
